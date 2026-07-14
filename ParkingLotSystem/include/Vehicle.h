@@ -1,15 +1,11 @@
 #pragma once
 
+#include "Types.h"
 using VehicleId = int;
 
 
-enum class VehicleType{
-    SMALL,
-    MEDIUM,
-    LARGE
-};
 
 struct Vehicle{
     VehicleId id;
-    VehicleType type;
+    SpaceType type;
 };
