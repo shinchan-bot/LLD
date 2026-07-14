@@ -26,10 +26,11 @@ public:
 
     ParkingSpot& findAvailableSpot(Vehicle v);
 
-    void makeSpotAvailable();
+    void releaseSpot();
+    void setParkingContext(std::string&& s);
 
 private:
     std::unordered_map<SpaceType, std::queue<ParkingSpot>> freeSpots;
-
+    std::unique_ptr<ParkingStrategy> parkingMethod;
     
 };

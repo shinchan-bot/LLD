@@ -1,11 +1,17 @@
 #include "../include/SpotManager.h"
 
-ParkingSpot& SpotManager::findAvailableSpot(Vehicle v){
-        ParkingSpot&  freeSpot = freeSpots[v.type].front();
-        freeSpots[v.type].pop();
-        return freeSpot;
-    }
+#include "../include/ParkingStrategyContext.h"
 
-void SpotManager::makeSpotAvailable(){
-        
-    }
+
+ParkingSpot& SpotManager::findAvailableSpot(Vehicle v){
+    return parkingMethod->findAvailableSpot(v, freeSpots);
+}
+
+void SpotManager::releaseSpot(){
+
+}
+
+void SpotManager::setParkingContext(std::string&& s ){
+    ParkingStrategyContext context;
+    parkingMethod = context.setParkingStrategy("NEAREST_FIRST");
+}
