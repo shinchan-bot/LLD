@@ -5,9 +5,10 @@
 
 Ticket ParkingLotSystem::park(Vehicle v){
     ParkingSpot freeSpot = spotManager->findAvailableSpot(v);
+
+
+    Ticket t;
     
-    //temporarily
-     Ticket t;
      return t;
 }
 

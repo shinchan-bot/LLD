@@ -8,7 +8,7 @@ ParkingSpot& SpotManager::findAvailableSpot(Vehicle v){
 }
 
 void SpotManager::releaseSpot(){
-
+    
 }
 
 void SpotManager::setParkingContext(std::string&& s ){

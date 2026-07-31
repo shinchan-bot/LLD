@@ -20,5 +20,6 @@ public:
 private:
     std::unique_ptr<TicketManager> ticketManager;
     std::unique_ptr<SpotManager> spotManager;
+    
     std::vector<ParkingFloor> floors;
 };

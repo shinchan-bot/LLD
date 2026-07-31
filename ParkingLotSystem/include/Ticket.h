@@ -6,7 +6,7 @@
 using TicketId = int;
 
 struct Ticket{
-    TicketId it;
+    TicketId id;
     int entryTime;
     int exitTime;
     Vehicle* vehicle;
