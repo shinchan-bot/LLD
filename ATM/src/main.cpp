@@ -94,12 +94,16 @@ public:
 };
 
 class Transaction{
+public:
+    // virtual void execute() = 0;
 
-    
+    // virtual void cancel() = 0;
 };
 
 class Withdraw: public Transaction{
-
+    void execute(){
+        
+    }
 };
 
 class Deposit : public Transaction{
@@ -128,9 +132,12 @@ public:
         bankingService->atmStatus = ATMStatus::Busy;
         cardReader.readCard();
         keyPad.readPIN();
+        // bankingService.authenticate(keyPad.getPIN(), )
         display.showMenu();
         TransactionType t = keyPad.readTransaction();
-        // unique_ptr<Transaction> _myTransaction = 
+        TransactionFactory myFactory;
+        unique_ptr<Transaction> _myTransaction = myFactory.createTransaction(t);
+        
 
     }
 
