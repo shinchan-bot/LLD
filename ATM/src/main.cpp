@@ -19,22 +19,33 @@ enum class TransactionType{
 class Card {
 public:
     string _cardNumber;
+    string _accountNumber;
 };
 
 class Session{
+public:
     Card card;
-    int accountNumber;
     int amount;
+    int pin;
+
 };
 
 class KeyPad{
 private:
-    std::string _pin;
 
 public:
-    void readPIN(){
+    int readPIN(){
         cout<<"Enter PIN: ";
-        cin>>_pin;
+        int pin;
+        cin>>pin;
+        return pin;
+    }
+
+    int readAmount(){
+        cout<<"Enter amount: ";
+        int amount;
+        cin>>amount;
+        return amount;
     }
 
     TransactionType readTransaction(){
@@ -47,10 +58,6 @@ public:
         else return TransactionType::Invalid;
     }
 
-    std::string getPIN() {
-        return _pin;
-    }
-
 };
 
 class Display{
@@ -61,57 +68,106 @@ public:
         cout<<"3 Ministatement"<<endl;
     }
 
+    void show(std::string_view message, int balance){
+        cout<<message<<endl;
+        cout<<"Account Balance: "<<balance<<endl;
+    }
+
 };
 
 class CardReader{
 private:
-    Card _card;
-
 
 public:
-    void readCard(){
+    Card readCard(){
         cout<<"Enter card number: ";
-        cin>>_card._cardNumber;
+        Card c;
+        cin>>c._cardNumber;
+        c._accountNumber = "02394802";
+        return c;
     }
-
-    Card getCard(){
-        return _card;
-    }
-
 };
 
 class CashDispenser{
-
+private:
+    int totalCash = 1000000;
+public:
+    bool dispense(const unique_ptr<Session>& s){
+        if(totalCash < s->amount){
+            return false;
+        }
+        totalCash-=s->amount;
+        return true;
+    }
 };
 
 class BankingService{
 public:
-    int accountId = 0;
+    string accountNumber = "02394802";
+    int pin = 1234;
     int balance = 10000;
     int atmId = 0;
     ATMStatus atmStatus = ATMStatus::Ready;
+
+    bool authenticate(const Session s){
+        if(accountNumber == s.card._accountNumber && pin == s.pin){
+            atmStatus = ATMStatus::Busy;
+            return true;
+        }
+        return false;
+    }
+
+    bool debit(const unique_ptr<Session>& s){
+        if(s->amount > balance){
+            return false;
+        }
+        balance-=s->amount;
+        atmStatus = ATMStatus::Ready;
+        return true;
+    }
+
+    bool refund(const unique_ptr<Session>& s){
+        balance+=s->amount;
+        return true;
+    }
+
+    int getBalance(const unique_ptr<Session>& s){
+        return balance;
+    }
 
 };
 
 class Transaction{
 public:
-    // virtual void execute() = 0;
+    virtual bool execute(const unique_ptr<Session>& s, BankingService& bs) = 0;
 
     // virtual void cancel() = 0;
+
+    virtual ~Transaction() = default;
+
 };
 
 class Withdraw: public Transaction{
-    void execute(){
-        
+public:
+    bool execute(const unique_ptr<Session>& s, BankingService& bs) override{
+
+        if(bs.debit(s)){
+            return true;
+        }
+        return false;
     }
 };
 
 class Deposit : public Transaction{
-
+    bool execute(const unique_ptr<Session>& s, BankingService& bs) override{
+        return true;
+    }
 };
 
 class MiniStatement : public Transaction{
-
+    bool execute(const unique_ptr<Session>& s, BankingService& bs) override{
+        return true;
+    }
 };
 
 class TransactionFactory{
@@ -129,16 +185,26 @@ public:
     ATM(BankingService* service): bankingService(service){}
 
     void start() {
-        bankingService->atmStatus = ATMStatus::Busy;
-        cardReader.readCard();
-        keyPad.readPIN();
-        // bankingService.authenticate(keyPad.getPIN(), )
-        display.showMenu();
-        TransactionType t = keyPad.readTransaction();
-        TransactionFactory myFactory;
-        unique_ptr<Transaction> _myTransaction = myFactory.createTransaction(t);
-        
+        currentSession = make_unique<Session>();
+        currentSession->card = cardReader.readCard();
+        currentSession->pin = keyPad.readPIN();
 
+        if(bankingService->authenticate(*currentSession)){
+            display.showMenu();
+            TransactionType t = keyPad.readTransaction();
+            unique_ptr<Transaction> _myTransaction = transactionFactory.createTransaction(t);
+
+            currentSession->amount = keyPad.readAmount();
+            if(_myTransaction->execute(currentSession, *bankingService)){
+                bool res = cashDispenser.dispense(currentSession);
+                if(res){
+                    int balance = bankingService->getBalance(currentSession);
+
+                    display.show("Success", balance);
+                    currentSession.reset();
+                }
+            }
+        }
     }
 
 private:
@@ -150,8 +216,8 @@ private:
     Display display;
     BankingService* bankingService;
 
-    std::unique_ptr<TransactionFactory> transactionFactory;
-    std::unique_ptr<Session> currentSession;
+    TransactionFactory transactionFactory;
+    unique_ptr<Session> currentSession;
 
 };
 
